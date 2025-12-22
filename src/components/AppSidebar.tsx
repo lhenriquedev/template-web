@@ -1,7 +1,6 @@
 import * as React from "react";
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -39,13 +38,25 @@ import {
   UserCircleIcon,
 } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
-import { NavLink } from "react-router";
+import { NavLink, useLocation } from "react-router";
+
+// Route titles mapping
+const routeTitles: Record<string, string> = {
+  "/": "Dashboard",
+  "/settings": "Settings",
+  "/data-library": "Data Library",
+  "/sign-in": "Sign In",
+  "/sign-up": "Sign Up",
+};
 
 export default function SidebarComponent({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  const location = useLocation();
+  const pageTitle = routeTitles[location.pathname] || "Dashboard";
+
   return (
     <SidebarProvider
       style={
@@ -57,7 +68,7 @@ export default function SidebarComponent({
     >
       <AppSidebar variant="inset" />
       <SidebarInset>
-        <SiteHeader title="Dashboard" />
+        <SiteHeader title={pageTitle} />
         <div className="flex flex-1 flex-col">
           <div className="@container/main flex flex-1 flex-col gap-2 p-4">
             {children}
@@ -305,23 +316,6 @@ function SiteHeader({ title }: { title: string }) {
           className="mx-2 data-[orientation=vertical]:h-4"
         />
         <h1 className="text-base font-medium">{title}</h1>
-        <div className="ml-auto flex items-center gap-2">
-          <Button
-            variant="ghost"
-            render={
-              <a
-                href="https://github.com/shadcn-ui/ui"
-                rel="noopener noreferrer"
-                target="_blank"
-                className="dark:text-foreground"
-              />
-            }
-            size="sm"
-            className="hidden sm:flex"
-          >
-            GitHub
-          </Button>
-        </div>
       </div>
     </header>
   );
