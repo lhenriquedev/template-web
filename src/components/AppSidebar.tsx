@@ -1,15 +1,6 @@
 import * as React from "react";
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuGroup,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 import { Separator } from "@/components/ui/separator";
 import {
   Sidebar,
@@ -26,34 +17,28 @@ import {
   SidebarProvider,
   SidebarTrigger,
 } from "@/components/ui/sidebar";
+import { useProfile } from "@/features/profile/useProfile";
 import {
+  BuildingIcon,
   CreditCardIcon,
-  Database01Icon,
   LayersIcon,
-  Logout01Icon,
-  MoreVerticalIcon,
-  Notification01Icon,
   Settings01Icon,
   SidebarLeftIcon,
-  UserCircleIcon,
+  TagIcon,
 } from "@hugeicons/core-free-icons";
-import { HugeiconsIcon } from "@hugeicons/react";
-import { NavLink, useLocation } from "react-router";
+import { HugeiconsIcon, type IconSvgElement } from "@hugeicons/react";
+import { NavLink, Outlet, useLocation } from "react-router";
 
 // Route titles mapping
 const routeTitles: Record<string, string> = {
   "/": "Dashboard",
-  "/settings": "Settings",
-  "/data-library": "Data Library",
-  "/sign-in": "Sign In",
-  "/sign-up": "Sign Up",
+  "/settings": "Configurações",
+  "/categories": "Categorias",
+  "/payments": "Pagamentos",
+  "/invoices": "Lançamentos",
 };
 
-export default function SidebarComponent({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+export function SidebarComponent() {
   const location = useLocation();
   const pageTitle = routeTitles[location.pathname] || "Dashboard";
 
@@ -71,7 +56,7 @@ export default function SidebarComponent({
         <SiteHeader title={pageTitle} />
         <div className="flex flex-1 flex-col">
           <div className="@container/main flex flex-1 flex-col gap-2 p-4">
-            {children}
+            <Outlet />
           </div>
         </div>
       </SidebarInset>
@@ -82,28 +67,43 @@ export default function SidebarComponent({
 function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const navMain = [
     {
-      title: "Dashboard",
+      title: "Home",
       url: "/",
+    },
+    {
+      title: "Lançamentos",
+      url: "/transactions",
     },
   ];
 
   const navSecondary = [
     {
       title: "Settings",
-      url: "/settings",
+      url: "/profile",
     },
   ];
 
   const documents = [
     {
-      name: "Data Library",
-      url: "/data-library",
+      name: "Categorias",
+      url: "/categories",
+      icon: TagIcon,
+    },
+    {
+      name: "Empresas",
+      url: "/companies",
+      icon: BuildingIcon,
+    },
+    {
+      name: "Contas Bancárias",
+      url: "/bank-accounts",
+      icon: CreditCardIcon,
     },
   ];
 
   const user = {
-    name: "shadcn",
-    email: "m@example.com",
+    name: "Henrique",
+    email: "henrique@indaiacontabil.com.br",
     avatar: "/avatars/shadcn.jpg",
   };
 
@@ -121,7 +121,7 @@ function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                 strokeWidth={2}
                 className="!size-5"
               />
-              <span className="text-base font-semibold">Template Web</span>
+              <span className="text-base font-semibold">Indaiá Finanças</span>
             </SidebarMenuButton>
           </SidebarMenuItem>
         </SidebarMenu>
@@ -172,17 +172,21 @@ function NavDocuments({
   items: {
     name: string;
     url: string;
+    icon?: IconSvgElement;
   }[];
 }) {
   return (
     <SidebarGroup className="group-data-[collapsible=icon]:hidden">
-      <SidebarGroupLabel>Documents</SidebarGroupLabel>
+      <SidebarGroupLabel>Gestão</SidebarGroupLabel>
       <SidebarMenu>
         {items.map((item) => (
           <SidebarMenuItem key={item.name}>
             <NavLink to={item.url}>
               <SidebarMenuButton>
-                <HugeiconsIcon icon={Database01Icon} strokeWidth={2} />
+                <HugeiconsIcon
+                  icon={item.icon ?? SidebarLeftIcon}
+                  strokeWidth={2}
+                />
                 <span>{item.name}</span>
               </SidebarMenuButton>
             </NavLink>
@@ -231,76 +235,26 @@ function NavUser({
     avatar: string;
   };
 }) {
+  const { profile } = useProfile(true);
+
   return (
     <SidebarMenu>
       <SidebarMenuItem>
-        <DropdownMenu>
-          <DropdownMenuTrigger
-            render={
-              <SidebarMenuButton
-                size="lg"
-                className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
-              />
-            }
-          >
-            <Avatar className="h-8 w-8 rounded-lg grayscale">
-              <AvatarImage src={user.avatar} alt={user.name} />
-              <AvatarFallback className="rounded-lg">CN</AvatarFallback>
-            </Avatar>
-            <div className="grid flex-1 text-left text-sm leading-tight">
-              <span className="truncate font-medium">{user.name}</span>
-              <span className="text-muted-foreground truncate text-xs">
-                {user.email}
-              </span>
-            </div>
-            <HugeiconsIcon
-              icon={MoreVerticalIcon}
-              strokeWidth={2}
-              className="ml-auto size-4"
-            />
-          </DropdownMenuTrigger>
-          <DropdownMenuContent
-            className="w-(--radix-dropdown-menu-trigger-width) min-w-56 rounded-lg"
-            side="right"
-            align="end"
-            sideOffset={4}
-          >
-            <DropdownMenuLabel className="p-0 font-normal">
-              <div className="flex items-center gap-2 px-1 py-1.5 text-left text-sm">
-                <Avatar className="h-8 w-8 rounded-lg">
-                  <AvatarImage src={user.avatar} alt={user.name} />
-                  <AvatarFallback className="rounded-lg">CN</AvatarFallback>
-                </Avatar>
-                <div className="grid flex-1 text-left text-sm leading-tight">
-                  <span className="truncate font-medium">{user.name}</span>
-                  <span className="text-muted-foreground truncate text-xs">
-                    {user.email}
-                  </span>
-                </div>
-              </div>
-            </DropdownMenuLabel>
-            <DropdownMenuSeparator />
-            <DropdownMenuGroup>
-              <DropdownMenuItem>
-                <HugeiconsIcon icon={UserCircleIcon} strokeWidth={2} />
-                Account
-              </DropdownMenuItem>
-              <DropdownMenuItem>
-                <HugeiconsIcon icon={CreditCardIcon} strokeWidth={2} />
-                Billing
-              </DropdownMenuItem>
-              <DropdownMenuItem>
-                <HugeiconsIcon icon={Notification01Icon} strokeWidth={2} />
-                Notifications
-              </DropdownMenuItem>
-            </DropdownMenuGroup>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem>
-              <HugeiconsIcon icon={Logout01Icon} strokeWidth={2} />
-              Log out
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
+        <div className="flex items-center gap-2 px-1 py-1.5 text-left text-sm">
+          <Avatar className="h-8 w-8 rounded-lg">
+            <AvatarImage src={user.avatar} alt={user.name} />
+            <AvatarFallback className="rounded-lg">CN</AvatarFallback>
+          </Avatar>
+          <div className="grid flex-1 text-left text-sm leading-tight">
+            <span className="truncate font-medium">{user.name}</span>
+            <span className="text-muted-foreground truncate text-xs">
+              {profile?.email}
+            </span>
+            <span className="text-muted-foreground truncate text-xs">
+              {profile?.role}
+            </span>
+          </div>
+        </div>
       </SidebarMenuItem>
     </SidebarMenu>
   );

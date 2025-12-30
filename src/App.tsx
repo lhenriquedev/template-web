@@ -1,7 +1,7 @@
 import { QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter } from "react-router";
-import SidebarComponent from "./components/AppSidebar";
 import { ErrorBoundary } from "./components/ErrorBoundary";
+import { Toaster } from "./components/ui/sonner";
 import { AuthProvider } from "./contexts/AuthContext";
 import { queryClient } from "./lib/queryClient";
 import { Router } from "./router";
@@ -12,12 +12,11 @@ export function App() {
       <QueryClientProvider client={queryClient}>
         <AuthProvider>
           <BrowserRouter>
-            <SidebarComponent>
-              <Router />
-            </SidebarComponent>
+            <Router />
           </BrowserRouter>
         </AuthProvider>
       </QueryClientProvider>
+      <Toaster richColors position="top-center" />
     </ErrorBoundary>
   );
 }

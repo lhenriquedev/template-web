@@ -26,6 +26,11 @@ export function AuthProvider({ children }: AuthProviderProps) {
     return !!localStorage.getItem(ACCESS_TOKEN);
   });
 
+  const setupAuth = useCallback((accessToken: string, refreshToken: string) => {
+    localStorage.setItem(ACCESS_TOKEN, accessToken);
+    localStorage.setItem(REFRESH_TOKEN, refreshToken);
+  }, []);
+
   useLayoutEffect(() => {
     const interceptorId = httpClient.interceptors.request.use((config) => {
       const accessToken = localStorage.getItem(ACCESS_TOKEN);
@@ -45,27 +50,23 @@ export function AuthProvider({ children }: AuthProviderProps) {
     const interceptorId = httpClient.interceptors.response.use(
       (response) => response,
       async (error) => {
-        const refreshToken = localStorage.getItem(REFRESH_TOKEN);
         const originalRequest = error.config;
-        const isError =
-          (error.response && error.response.status !== 401) || !refreshToken;
+        const refreshToken = localStorage.getItem(REFRESH_TOKEN);
 
         if (originalRequest.url === "/refresh-token") {
-          localStorage.clear();
           setSignedIn(false);
+          localStorage.clear();
           return Promise.reject(error);
         }
 
-        if (isError) {
-          setSignedIn(false);
+        if (error.response?.status !== 401 || !refreshToken) {
           return Promise.reject(error);
         }
 
         const { accessToken, refreshToken: newRefreshToken } =
           await AuthService.refreshToken(refreshToken);
 
-        localStorage.setItem(REFRESH_TOKEN, newRefreshToken);
-        localStorage.setItem(ACCESS_TOKEN, accessToken);
+        setupAuth(accessToken, newRefreshToken);
 
         return httpClient(originalRequest);
       }
@@ -74,18 +75,20 @@ export function AuthProvider({ children }: AuthProviderProps) {
     return () => {
       httpClient.interceptors.response.eject(interceptorId);
     };
-  }, []);
+  }, [setupAuth]);
 
-  const signIn = useCallback(async (email: string, password: string) => {
-    const { accessToken, refreshToken } = await AuthService.signIn({
-      email,
-      password,
-    });
+  const signIn = useCallback(
+    async (email: string, password: string) => {
+      const { accessToken, refreshToken } = await AuthService.signIn({
+        email,
+        password,
+      });
 
-    localStorage.setItem(ACCESS_TOKEN, accessToken);
-    localStorage.setItem(REFRESH_TOKEN, refreshToken);
-    setSignedIn(true);
-  }, []);
+      setupAuth(accessToken, refreshToken);
+      setSignedIn(true);
+    },
+    [setupAuth]
+  );
 
   const signOut = useCallback(() => {
     localStorage.clear();
