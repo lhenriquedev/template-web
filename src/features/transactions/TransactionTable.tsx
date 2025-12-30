@@ -11,7 +11,6 @@ import {
   useReactTable,
 } from "@tanstack/react-table";
 
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
   Table,
@@ -165,16 +164,6 @@ export function InvoiceTable<TData, TValue>({
         <div>
           {table.getFilteredRowModel().rows.length} lançamento(s) encontrado(s)
         </div>
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => {
-            setColumnFilters([]);
-            setSorting([]);
-          }}
-        >
-          Limpar filtros
-        </Button>
       </div>
     </div>
   );
