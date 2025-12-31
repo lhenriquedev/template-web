@@ -1,7 +1,11 @@
+import { CompanyList } from "@/features/company/CompanyList";
+import { CreateCompanyHeader } from "@/features/company/CreateCompanyHeader";
+
 export default function CompaniesPage() {
   return (
     <div className="flex flex-col gap-4">
-      <h1 className="text-2xl font-bold">Empresas</h1>
+      <CreateCompanyHeader />
+      <CompanyList />
     </div>
   );
 }

@@ -26,6 +26,8 @@ interface IProfileResponse {
   };
 }
 
+export type IProfileData = IProfileResponse["data"];
+
 export class AuthService {
   static async signUp(body: ISignUpDTO) {
     const { data } = await httpClient.post("/signup", body);
@@ -47,5 +49,10 @@ export class AuthService {
   static async getProfile() {
     const { data } = await httpClient.get<IProfileResponse>("/profile");
     return data.data;
+  }
+
+  static async signOut() {
+    const { data } = await httpClient.post("/signout");
+    return data;
   }
 }

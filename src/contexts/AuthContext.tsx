@@ -1,13 +1,11 @@
+import { useProfile } from "@/features/profile/useProfile";
+import { useForceRender } from "@/hooks/useForceRender";
 import { AuthService } from "@/services/AuthService";
 import { httpClient } from "@/services/httpClient";
 import { ACCESS_TOKEN, REFRESH_TOKEN } from "@/storage/keys";
-import {
-  createContext,
-  use,
-  useCallback,
-  useLayoutEffect,
-  useState,
-} from "react";
+import { useQueryClient } from "@tanstack/react-query";
+import { isAxiosError } from "axios";
+import { createContext, use, useCallback, useLayoutEffect } from "react";
 
 type AuthProviderProps = {
   children: React.ReactNode;
@@ -22,14 +20,38 @@ interface IAuthContextValue {
 export const AuthContext = createContext({} as IAuthContextValue);
 
 export function AuthProvider({ children }: AuthProviderProps) {
-  const [signedIn, setSignedIn] = useState(() => {
-    return !!localStorage.getItem(ACCESS_TOKEN);
-  });
+  const { profile, loadProfile, isProfileLoading } = useProfile(false);
 
-  const setupAuth = useCallback((accessToken: string, refreshToken: string) => {
-    localStorage.setItem(ACCESS_TOKEN, accessToken);
-    localStorage.setItem(REFRESH_TOKEN, refreshToken);
-  }, []);
+  const queryClient = useQueryClient();
+  const forceRender = useForceRender();
+
+  const setupAuth = useCallback(
+    async (accessToken: string, refreshToken: string) => {
+      localStorage.setItem(ACCESS_TOKEN, accessToken);
+      localStorage.setItem(REFRESH_TOKEN, refreshToken);
+
+      await loadProfile();
+    },
+    [loadProfile]
+  );
+
+  const signIn = useCallback(
+    async (email: string, password: string) => {
+      const { accessToken, refreshToken } = await AuthService.signIn({
+        email,
+        password,
+      });
+
+      await setupAuth(accessToken, refreshToken);
+    },
+    [setupAuth]
+  );
+
+  const signOut = useCallback(async () => {
+    queryClient.clear();
+    forceRender();
+    await AuthService.signOut();
+  }, [queryClient, forceRender]);
 
   useLayoutEffect(() => {
     const interceptorId = httpClient.interceptors.request.use((config) => {
@@ -50,25 +72,31 @@ export function AuthProvider({ children }: AuthProviderProps) {
     const interceptorId = httpClient.interceptors.response.use(
       (response) => response,
       async (error) => {
-        const originalRequest = error.config;
         const refreshToken = localStorage.getItem(REFRESH_TOKEN);
 
-        if (originalRequest.url === "/refresh-token") {
-          setSignedIn(false);
-          localStorage.clear();
-          return Promise.reject(error);
-        }
-
-        if (error.response?.status !== 401 || !refreshToken) {
+        if (
+          !isAxiosError(error) ||
+          error.response?.status !== 401 ||
+          !error.config ||
+          error.config.url === "/refresh-token" ||
+          !refreshToken
+        ) {
+          httpClient.defaults.headers.common.Authorization = null;
+          localStorage.removeItem(ACCESS_TOKEN);
+          localStorage.removeItem(REFRESH_TOKEN);
+          signOut();
           return Promise.reject(error);
         }
 
         const { accessToken, refreshToken: newRefreshToken } =
           await AuthService.refreshToken(refreshToken);
 
-        setupAuth(accessToken, newRefreshToken);
+        error.config.headers.set("Authorization", `Bearer ${accessToken}`);
 
-        return httpClient(originalRequest);
+        localStorage.setItem(ACCESS_TOKEN, accessToken);
+        localStorage.setItem(REFRESH_TOKEN, newRefreshToken);
+
+        return httpClient(error.config);
       }
     );
 
@@ -77,26 +105,23 @@ export function AuthProvider({ children }: AuthProviderProps) {
     };
   }, [setupAuth]);
 
-  const signIn = useCallback(
-    async (email: string, password: string) => {
-      const { accessToken, refreshToken } = await AuthService.signIn({
-        email,
-        password,
-      });
+  useLayoutEffect(() => {
+    async function load() {
+      const accessToken = localStorage.getItem(ACCESS_TOKEN);
+      const refreshToken = localStorage.getItem(REFRESH_TOKEN);
 
-      setupAuth(accessToken, refreshToken);
-      setSignedIn(true);
-    },
-    [setupAuth]
-  );
+      if (!accessToken || !refreshToken) {
+        return;
+      }
 
-  const signOut = useCallback(() => {
-    localStorage.clear();
-    setSignedIn(false);
-  }, []);
+      await setupAuth(accessToken, refreshToken);
+    }
+
+    load();
+  }, [loadProfile, signOut]);
 
   const value: IAuthContextValue = {
-    signedIn,
+    signedIn: !!profile,
     signIn,
     signOut,
   };

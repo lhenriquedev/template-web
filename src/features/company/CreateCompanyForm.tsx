@@ -11,55 +11,45 @@ import {
 import { Field, FieldError, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { LoadingButton } from "@/components/ui/loading-button";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import type { ICategoryResponse } from "@/services/CategoryService";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { PlusSignIcon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { Controller, useForm } from "react-hook-form";
 import { toast } from "sonner";
 import {
-  createSubcategorySchema,
-  type CreateSubcategorySchema,
-} from "./createSubcategorySchema";
-import { useCreateSubcategory } from "./useCreateSubcategory";
+  createCompanySchema,
+  type CreateCompanySchema,
+} from "./createCompanySchema";
+import { useCreateCompany } from "./useCreateCompany";
 
-interface ICreateSubcategoryFormProps {
+interface ICreateCompanyFormProps {
   isOpen: boolean;
   onClose: () => void;
-  categories: ICategoryResponse[];
 }
 
-export function CreateSubcategoryForm({
+export function CreateCompanyForm({
   isOpen,
   onClose,
-  categories,
-}: ICreateSubcategoryFormProps) {
-  const { createSubcategory, isPending } = useCreateSubcategory();
+}: ICreateCompanyFormProps) {
+  const { createCompany, isPending } = useCreateCompany();
 
-  const form = useForm<CreateSubcategorySchema>({
-    resolver: zodResolver(createSubcategorySchema),
+  const form = useForm<CreateCompanySchema>({
+    resolver: zodResolver(createCompanySchema),
     defaultValues: {
       name: "",
-      category_id: "",
+      document: "",
     },
   });
 
-  const onSubmit = form.handleSubmit(async (data: CreateSubcategorySchema) => {
+  const onSubmit = form.handleSubmit(async (data: CreateCompanySchema) => {
     try {
-      await createSubcategory(data);
+      await createCompany(data);
       onClose();
       form.reset();
-      toast.success("Subcategoria criada com sucesso");
+      toast.success("Empresa criada com sucesso");
     } catch (error) {
       console.error(error);
-      toast.error("Erro ao criar subcategoria");
+      toast.error("Erro ao criar empresa");
       form.reset();
     }
   });
@@ -68,9 +58,9 @@ export function CreateSubcategoryForm({
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Nova subcategoria</DialogTitle>
+          <DialogTitle>Nova empresa</DialogTitle>
           <DialogDescription>
-            Adicione uma nova subcategoria vinculada a uma categoria.
+            Adicione uma nova empresa para gerenciar suas transações.
           </DialogDescription>
         </DialogHeader>
 
@@ -83,7 +73,7 @@ export function CreateSubcategoryForm({
                 <FieldLabel>Nome</FieldLabel>
                 <Input
                   {...field}
-                  placeholder="Digite o nome da subcategoria"
+                  placeholder="Digite o nome da empresa"
                   disabled={isPending}
                 />
                 <FieldError errors={[form.formState.errors.name]} />
@@ -93,27 +83,16 @@ export function CreateSubcategoryForm({
 
           <Controller
             control={form.control}
-            name="category_id"
+            name="document"
             render={({ field }) => (
               <Field>
-                <FieldLabel>Categoria</FieldLabel>
-                <Select
+                <FieldLabel>Documento</FieldLabel>
+                <Input
                   {...field}
-                  onValueChange={field.onChange}
+                  placeholder="Digite o documento (CNPJ/CPF)"
                   disabled={isPending}
-                >
-                  <SelectTrigger>
-                    <SelectValue>Selecione a categoria</SelectValue>
-                  </SelectTrigger>
-                  <SelectContent>
-                    {categories.map((category) => (
-                      <SelectItem key={category.id} value={category.id}>
-                        {category.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                <FieldError errors={[form.formState.errors.category_id]} />
+                />
+                <FieldError errors={[form.formState.errors.document]} />
               </Field>
             )}
           />
@@ -134,7 +113,7 @@ export function CreateSubcategoryForm({
             disabled={isPending}
           >
             <HugeiconsIcon icon={PlusSignIcon} strokeWidth={2} />
-            Criar subcategoria
+            Criar empresa
           </LoadingButton>
         </DialogFooter>
       </DialogContent>

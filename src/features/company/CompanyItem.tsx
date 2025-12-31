@@ -1,3 +1,5 @@
+import type { ICompanyResponse } from "@/services/CompanyService";
+
 import { Button } from "@/components/ui/button";
 import {
   Item,
@@ -7,36 +9,28 @@ import {
   ItemTitle,
 } from "@/components/ui/item";
 import { formatDate } from "@/lib/format";
-import type { ISubcategoryResponse } from "@/services/SubcategoryService";
-import type { ISubsubcategoryResponse } from "@/services/SubsubcategoryService";
 import { DeleteIcon, EditIcon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
 
-interface ISubsubcategoryItemProps {
-  subsubcategory: ISubsubcategoryResponse;
-  subcategories: ISubcategoryResponse[];
-  onOpenSubsubcategoryItemDialog: () => void;
+interface ICompanyItemProps {
+  company: ICompanyResponse;
+  onOpenCompanyItemDialog: () => void;
   onDelete: () => void;
 }
 
-export function SubsubcategoryItem({
-  subsubcategory,
-  subcategories,
-  onOpenSubsubcategoryItemDialog,
+export function CompanyItem({
+  company,
+  onOpenCompanyItemDialog,
   onDelete,
-}: ISubsubcategoryItemProps) {
-  const subcategory = subcategories.find(
-    (s) => s.id === subsubcategory.subcategory_id
-  );
-
+}: ICompanyItemProps) {
   return (
     <Item variant="outline">
       <ItemContent>
-        <ItemTitle>{subsubcategory.name}</ItemTitle>
+        <ItemTitle>{company.name}</ItemTitle>
         <ItemDescription>
           <span className="text-muted-foreground text-xs">
-            Subcategoria: {subcategory?.name || "N/A"} • Criado em{" "}
-            {formatDate(new Date(subsubcategory.created_at))}
+            {company.document} • Criado em{" "}
+            {formatDate(new Date(company.created_at))}
           </span>
         </ItemDescription>
       </ItemContent>
@@ -44,7 +38,7 @@ export function SubsubcategoryItem({
         <Button
           variant="outline"
           size="icon"
-          onClick={onOpenSubsubcategoryItemDialog}
+          onClick={onOpenCompanyItemDialog}
         >
           <HugeiconsIcon icon={EditIcon} strokeWidth={2} />
         </Button>

@@ -51,7 +51,7 @@ export function SubsubcategoryItemDialog({
     resolver: zodResolver(updateSubsubcategorySchema),
     defaultValues: {
       name: subsubcategory?.name || "",
-      subCategoryId: subsubcategory?.subCategoryId || "",
+      subcategory_id: subsubcategory?.subcategory_id || "",
     },
   });
 
@@ -59,7 +59,7 @@ export function SubsubcategoryItemDialog({
     if (subsubcategory) {
       form.reset({
         name: subsubcategory.name,
-        subCategoryId: subsubcategory.subCategoryId,
+        subcategory_id: subsubcategory.subcategory_id,
       });
     }
   }, [subsubcategory, form]);
@@ -85,8 +85,8 @@ export function SubsubcategoryItemDialog({
         <DialogHeader>
           <DialogTitle>Editar sub-subcategoria</DialogTitle>
           <DialogDescription>
-            Atualize as informações da sub-subcategoria "
-            {subsubcategory?.name}".
+            Atualize as informações da sub-subcategoria "{subsubcategory?.name}
+            ".
           </DialogDescription>
         </DialogHeader>
 
@@ -109,7 +109,7 @@ export function SubsubcategoryItemDialog({
 
           <Controller
             control={form.control}
-            name="subCategoryId"
+            name="subcategory_id"
             render={({ field }) => (
               <Field>
                 <FieldLabel>Subcategoria</FieldLabel>
@@ -119,7 +119,7 @@ export function SubsubcategoryItemDialog({
                   disabled={isPending}
                 >
                   <SelectTrigger>
-                    <SelectValue placeholder="Selecione a subcategoria" />
+                    <SelectValue>Selecione a subcategoria</SelectValue>
                   </SelectTrigger>
                   <SelectContent>
                     {subcategories.map((subcategory) => (
@@ -129,7 +129,7 @@ export function SubsubcategoryItemDialog({
                     ))}
                   </SelectContent>
                 </Select>
-                <FieldError errors={[form.formState.errors.subCategoryId]} />
+                <FieldError errors={[form.formState.errors.subcategory_id]} />
               </Field>
             )}
           />

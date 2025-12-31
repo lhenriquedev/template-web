@@ -18,48 +18,49 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import type { ICategoryResponse } from "@/services/CategoryService";
+import { useListCompanies } from "@/features/company/useListCompanies";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { PlusSignIcon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { Controller, useForm } from "react-hook-form";
 import { toast } from "sonner";
 import {
-  createSubcategorySchema,
-  type CreateSubcategorySchema,
-} from "./createSubcategorySchema";
-import { useCreateSubcategory } from "./useCreateSubcategory";
+  createBankAccountSchema,
+  type CreateBankAccountSchema,
+} from "./createBankAccountSchema";
+import { useCreateBankAccount } from "./useCreateBankAccount";
 
-interface ICreateSubcategoryFormProps {
+interface ICreateBankAccountFormProps {
   isOpen: boolean;
   onClose: () => void;
-  categories: ICategoryResponse[];
 }
 
-export function CreateSubcategoryForm({
+export function CreateBankAccountForm({
   isOpen,
   onClose,
-  categories,
-}: ICreateSubcategoryFormProps) {
-  const { createSubcategory, isPending } = useCreateSubcategory();
+}: ICreateBankAccountFormProps) {
+  const { createBankAccount, isPending } = useCreateBankAccount();
+  const { companies } = useListCompanies();
 
-  const form = useForm<CreateSubcategorySchema>({
-    resolver: zodResolver(createSubcategorySchema),
+  const form = useForm<CreateBankAccountSchema>({
+    resolver: zodResolver(createBankAccountSchema),
     defaultValues: {
       name: "",
-      category_id: "",
+      bank_name: "",
+      account_number: "",
+      company_id: "",
     },
   });
 
-  const onSubmit = form.handleSubmit(async (data: CreateSubcategorySchema) => {
+  const onSubmit = form.handleSubmit(async (data: CreateBankAccountSchema) => {
     try {
-      await createSubcategory(data);
+      await createBankAccount(data);
       onClose();
       form.reset();
-      toast.success("Subcategoria criada com sucesso");
+      toast.success("Conta bancária criada com sucesso");
     } catch (error) {
       console.error(error);
-      toast.error("Erro ao criar subcategoria");
+      toast.error("Erro ao criar conta bancária");
       form.reset();
     }
   });
@@ -68,9 +69,9 @@ export function CreateSubcategoryForm({
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Nova subcategoria</DialogTitle>
+          <DialogTitle>Nova conta bancária</DialogTitle>
           <DialogDescription>
-            Adicione uma nova subcategoria vinculada a uma categoria.
+            Adicione uma nova conta bancária vinculada a uma empresa.
           </DialogDescription>
         </DialogHeader>
 
@@ -80,10 +81,10 @@ export function CreateSubcategoryForm({
             name="name"
             render={({ field }) => (
               <Field>
-                <FieldLabel>Nome</FieldLabel>
+                <FieldLabel>Nome da conta</FieldLabel>
                 <Input
                   {...field}
-                  placeholder="Digite o nome da subcategoria"
+                  placeholder="Ex: Conta Principal"
                   disabled={isPending}
                 />
                 <FieldError errors={[form.formState.errors.name]} />
@@ -93,27 +94,59 @@ export function CreateSubcategoryForm({
 
           <Controller
             control={form.control}
-            name="category_id"
+            name="bank_name"
             render={({ field }) => (
               <Field>
-                <FieldLabel>Categoria</FieldLabel>
+                <FieldLabel>Nome do banco</FieldLabel>
+                <Input
+                  {...field}
+                  placeholder="Ex: Banco do Brasil"
+                  disabled={isPending}
+                />
+                <FieldError errors={[form.formState.errors.bank_name]} />
+              </Field>
+            )}
+          />
+
+          <Controller
+            control={form.control}
+            name="account_number"
+            render={({ field }) => (
+              <Field>
+                <FieldLabel>Número da conta (opcional)</FieldLabel>
+                <Input
+                  {...field}
+                  placeholder="Ex: 12345-6"
+                  disabled={isPending}
+                />
+                <FieldError errors={[form.formState.errors.account_number]} />
+              </Field>
+            )}
+          />
+
+          <Controller
+            control={form.control}
+            name="company_id"
+            render={({ field }) => (
+              <Field>
+                <FieldLabel>Empresa</FieldLabel>
                 <Select
                   {...field}
                   onValueChange={field.onChange}
                   disabled={isPending}
                 >
-                  <SelectTrigger>
-                    <SelectValue>Selecione a categoria</SelectValue>
+                  <SelectTrigger className="w-full">
+                    <SelectValue>Selecione a empresa</SelectValue>
                   </SelectTrigger>
                   <SelectContent>
-                    {categories.map((category) => (
-                      <SelectItem key={category.id} value={category.id}>
-                        {category.name}
+                    {companies?.map((company) => (
+                      <SelectItem key={company.id} value={company.id}>
+                        {company.name}
                       </SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
-                <FieldError errors={[form.formState.errors.category_id]} />
+                <FieldError errors={[form.formState.errors.company_id]} />
               </Field>
             )}
           />
@@ -134,7 +167,7 @@ export function CreateSubcategoryForm({
             disabled={isPending}
           >
             <HugeiconsIcon icon={PlusSignIcon} strokeWidth={2} />
-            Criar subcategoria
+            Criar conta bancária
           </LoadingButton>
         </DialogFooter>
       </DialogContent>

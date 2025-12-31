@@ -2,18 +2,18 @@ import { httpClient } from "./httpClient";
 
 export interface ICreateSubsubcategoryDTO {
   name: string;
-  subCategoryId: string;
+  subcategory_id: string;
 }
 
 export interface IUpdateSubsubcategoryDTO {
   name?: string;
-  subCategoryId?: string;
+  subcategory_id?: string;
 }
 
 export interface ISubsubcategoryResponse {
   id: string;
   name: string;
-  subCategoryId: string;
+  subcategory_id: string;
   created_at: string;
 }
 

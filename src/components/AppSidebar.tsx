@@ -1,6 +1,6 @@
 import * as React from "react";
 
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Separator } from "@/components/ui/separator";
 import {
   Sidebar,
@@ -36,6 +36,7 @@ const routeTitles: Record<string, string> = {
   "/categories": "Categorias",
   "/payments": "Pagamentos",
   "/invoices": "Lançamentos",
+  "/profile": "Perfil",
 };
 
 export function SidebarComponent() {
@@ -101,12 +102,6 @@ function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
     },
   ];
 
-  const user = {
-    name: "Henrique",
-    email: "henrique@indaiacontabil.com.br",
-    avatar: "/avatars/shadcn.jpg",
-  };
-
   return (
     <Sidebar collapsible="icon" {...props}>
       <SidebarHeader>
@@ -132,7 +127,7 @@ function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         <NavSecondary items={navSecondary} className="mt-auto" />
       </SidebarContent>
       <SidebarFooter>
-        <NavUser user={user} />
+        <NavUser />
       </SidebarFooter>
     </Sidebar>
   );
@@ -226,32 +221,32 @@ function NavSecondary({
   );
 }
 
-function NavUser({
-  user,
-}: {
-  user: {
-    name: string;
-    email: string;
-    avatar: string;
-  };
-}) {
+function NavUser() {
   const { profile } = useProfile(true);
+
+  if (!profile) return null;
+
+  const initials = profile.full_name
+    .split(" ")
+    .map((n) => n[0])
+    .join("")
+    .toUpperCase()
+    .slice(0, 2);
 
   return (
     <SidebarMenu>
       <SidebarMenuItem>
         <div className="flex items-center gap-2 px-1 py-1.5 text-left text-sm">
           <Avatar className="h-8 w-8 rounded-lg">
-            <AvatarImage src={user.avatar} alt={user.name} />
-            <AvatarFallback className="rounded-lg">CN</AvatarFallback>
+            <AvatarFallback className="rounded-lg">{initials}</AvatarFallback>
           </Avatar>
           <div className="grid flex-1 text-left text-sm leading-tight">
-            <span className="truncate font-medium">{user.name}</span>
+            <span className="truncate font-medium">{profile.full_name}</span>
             <span className="text-muted-foreground truncate text-xs">
-              {profile?.email}
+              {profile.email}
             </span>
             <span className="text-muted-foreground truncate text-xs">
-              {profile?.role}
+              {profile.role}
             </span>
           </div>
         </div>

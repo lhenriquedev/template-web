@@ -11,15 +11,7 @@ import {
 import { Field, FieldError, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { LoadingButton } from "@/components/ui/loading-button";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import type { ICategoryResponse } from "@/services/CategoryService";
-import type { ISubcategoryResponse } from "@/services/SubcategoryService";
+import type { IBankAccountResponse } from "@/services/BankAccountService";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Edit02Icon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
@@ -27,53 +19,53 @@ import { useEffect } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { toast } from "sonner";
 import {
-  updateSubcategorySchema,
-  type UpdateSubcategorySchema,
-} from "./updateSubcategorySchema";
-import { useUpdateSubcategory } from "./useUpdateSubcategory";
+  updateBankAccountSchema,
+  type UpdateBankAccountSchema,
+} from "./updateBankAccountSchema";
+import { useUpdateBankAccount } from "./useUpdateBankAccount";
 
-interface ISubcategoryItemDialogProps {
+interface IBankAccountItemDialogProps {
   isOpen: boolean;
   onClose: () => void;
-  subcategory: ISubcategoryResponse | null;
-  categories: ICategoryResponse[];
+  bankAccount: IBankAccountResponse | null;
 }
 
-export function SubcategoryItemDialog({
+export function BankAccountItemDialog({
   isOpen,
   onClose,
-  subcategory,
-  categories,
-}: ISubcategoryItemDialogProps) {
-  const { updateSubcategory, isPending } = useUpdateSubcategory();
+  bankAccount,
+}: IBankAccountItemDialogProps) {
+  const { updateBankAccount, isPending } = useUpdateBankAccount();
 
-  const form = useForm<UpdateSubcategorySchema>({
-    resolver: zodResolver(updateSubcategorySchema),
+  const form = useForm<UpdateBankAccountSchema>({
+    resolver: zodResolver(updateBankAccountSchema),
     defaultValues: {
-      name: subcategory?.name || "",
-      category_id: subcategory?.category_id || "",
+      name: bankAccount?.name ?? "",
+      bank_name: bankAccount?.bank_name ?? "",
+      account_number: bankAccount?.account_number ?? "",
     },
   });
 
   useEffect(() => {
-    if (subcategory) {
+    if (bankAccount) {
       form.reset({
-        name: subcategory.name,
-        category_id: subcategory.category_id,
+        name: bankAccount.name,
+        bank_name: bankAccount.bank_name,
+        account_number: bankAccount.account_number ?? "",
       });
     }
-  }, [subcategory, form]);
+  }, [bankAccount, form]);
 
-  const onSubmit = form.handleSubmit(async (data: UpdateSubcategorySchema) => {
-    if (!subcategory) return;
+  const onSubmit = form.handleSubmit(async (data: UpdateBankAccountSchema) => {
+    if (!bankAccount) return;
 
     try {
-      await updateSubcategory({ id: subcategory.id, data });
+      await updateBankAccount({ id: bankAccount.id, data });
       onClose();
-      toast.success("Subcategoria atualizada com sucesso");
+      toast.success("Conta bancária atualizada com sucesso");
     } catch (error) {
       console.error(error);
-      toast.error("Erro ao atualizar subcategoria");
+      toast.error("Erro ao atualizar conta bancária");
     }
   });
 
@@ -81,9 +73,9 @@ export function SubcategoryItemDialog({
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Editar subcategoria</DialogTitle>
+          <DialogTitle>Editar conta bancária</DialogTitle>
           <DialogDescription>
-            Atualize as informações da subcategoria "{subcategory?.name}".
+            Atualize as informações da conta "{bankAccount?.name}".
           </DialogDescription>
         </DialogHeader>
 
@@ -93,10 +85,10 @@ export function SubcategoryItemDialog({
             name="name"
             render={({ field }) => (
               <Field>
-                <FieldLabel>Nome</FieldLabel>
+                <FieldLabel>Nome da conta</FieldLabel>
                 <Input
                   {...field}
-                  placeholder="Digite o nome da subcategoria"
+                  placeholder="Ex: Conta Principal"
                   disabled={isPending}
                 />
                 <FieldError errors={[form.formState.errors.name]} />
@@ -106,27 +98,32 @@ export function SubcategoryItemDialog({
 
           <Controller
             control={form.control}
-            name="category_id"
+            name="bank_name"
             render={({ field }) => (
               <Field>
-                <FieldLabel>Categoria</FieldLabel>
-                <Select
+                <FieldLabel>Nome do banco</FieldLabel>
+                <Input
                   {...field}
-                  onValueChange={field.onChange}
+                  placeholder="Ex: Banco do Brasil"
                   disabled={isPending}
-                >
-                  <SelectTrigger>
-                    <SelectValue>Selecione a categoria</SelectValue>
-                  </SelectTrigger>
-                  <SelectContent>
-                    {categories.map((category) => (
-                      <SelectItem key={category.id} value={category.id}>
-                        {category.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                <FieldError errors={[form.formState.errors.category_id]} />
+                />
+                <FieldError errors={[form.formState.errors.bank_name]} />
+              </Field>
+            )}
+          />
+
+          <Controller
+            control={form.control}
+            name="account_number"
+            render={({ field }) => (
+              <Field>
+                <FieldLabel>Número da conta (opcional)</FieldLabel>
+                <Input
+                  {...field}
+                  placeholder="Ex: 12345-6"
+                  disabled={isPending}
+                />
+                <FieldError errors={[form.formState.errors.account_number]} />
               </Field>
             )}
           />

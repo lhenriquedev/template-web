@@ -1,2 +1,2 @@
-export const ACCESS_TOKEN = "template:accessToken";
-export const REFRESH_TOKEN = "template:refreshToken";
+export const ACCESS_TOKEN = "@indaia-finances:accessToken";
+export const REFRESH_TOKEN = "@indaia-finances:refreshToken";

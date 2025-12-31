@@ -11,15 +11,7 @@ import {
 import { Field, FieldError, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { LoadingButton } from "@/components/ui/loading-button";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import type { ICategoryResponse } from "@/services/CategoryService";
-import type { ISubcategoryResponse } from "@/services/SubcategoryService";
+import type { ICompanyResponse } from "@/services/CompanyService";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Edit02Icon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
@@ -27,53 +19,48 @@ import { useEffect } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { toast } from "sonner";
 import {
-  updateSubcategorySchema,
-  type UpdateSubcategorySchema,
-} from "./updateSubcategorySchema";
-import { useUpdateSubcategory } from "./useUpdateSubcategory";
+  updateCompanySchema,
+  type UpdateCompanySchema,
+} from "./updateCompanySchema";
+import { useUpdateCompany } from "./useUpdateCompany";
 
-interface ISubcategoryItemDialogProps {
+interface ICompanyItemDialogProps {
   isOpen: boolean;
   onClose: () => void;
-  subcategory: ISubcategoryResponse | null;
-  categories: ICategoryResponse[];
+  company: ICompanyResponse | null;
 }
 
-export function SubcategoryItemDialog({
+export function CompanyItemDialog({
   isOpen,
   onClose,
-  subcategory,
-  categories,
-}: ISubcategoryItemDialogProps) {
-  const { updateSubcategory, isPending } = useUpdateSubcategory();
+  company,
+}: ICompanyItemDialogProps) {
+  const { updateCompany, isPending } = useUpdateCompany();
 
-  const form = useForm<UpdateSubcategorySchema>({
-    resolver: zodResolver(updateSubcategorySchema),
+  const form = useForm<UpdateCompanySchema>({
+    resolver: zodResolver(updateCompanySchema),
     defaultValues: {
-      name: subcategory?.name || "",
-      category_id: subcategory?.category_id || "",
+      name: company?.name ?? "",
+      document: company?.document ?? "",
     },
   });
 
   useEffect(() => {
-    if (subcategory) {
-      form.reset({
-        name: subcategory.name,
-        category_id: subcategory.category_id,
-      });
+    if (company) {
+      form.reset({ name: company.name, document: company.document });
     }
-  }, [subcategory, form]);
+  }, [company, form]);
 
-  const onSubmit = form.handleSubmit(async (data: UpdateSubcategorySchema) => {
-    if (!subcategory) return;
+  const onSubmit = form.handleSubmit(async (data: UpdateCompanySchema) => {
+    if (!company) return;
 
     try {
-      await updateSubcategory({ id: subcategory.id, data });
+      await updateCompany({ id: company.id, data });
       onClose();
-      toast.success("Subcategoria atualizada com sucesso");
+      toast.success("Empresa atualizada com sucesso");
     } catch (error) {
       console.error(error);
-      toast.error("Erro ao atualizar subcategoria");
+      toast.error("Erro ao atualizar empresa");
     }
   });
 
@@ -81,9 +68,9 @@ export function SubcategoryItemDialog({
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Editar subcategoria</DialogTitle>
+          <DialogTitle>Editar empresa</DialogTitle>
           <DialogDescription>
-            Atualize as informações da subcategoria "{subcategory?.name}".
+            Atualize as informações da empresa "{company?.name}".
           </DialogDescription>
         </DialogHeader>
 
@@ -96,7 +83,7 @@ export function SubcategoryItemDialog({
                 <FieldLabel>Nome</FieldLabel>
                 <Input
                   {...field}
-                  placeholder="Digite o nome da subcategoria"
+                  placeholder="Digite o nome da empresa"
                   disabled={isPending}
                 />
                 <FieldError errors={[form.formState.errors.name]} />
@@ -106,27 +93,16 @@ export function SubcategoryItemDialog({
 
           <Controller
             control={form.control}
-            name="category_id"
+            name="document"
             render={({ field }) => (
               <Field>
-                <FieldLabel>Categoria</FieldLabel>
-                <Select
+                <FieldLabel>Documento</FieldLabel>
+                <Input
                   {...field}
-                  onValueChange={field.onChange}
+                  placeholder="Digite o documento (CNPJ/CPF)"
                   disabled={isPending}
-                >
-                  <SelectTrigger>
-                    <SelectValue>Selecione a categoria</SelectValue>
-                  </SelectTrigger>
-                  <SelectContent>
-                    {categories.map((category) => (
-                      <SelectItem key={category.id} value={category.id}>
-                        {category.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                <FieldError errors={[form.formState.errors.category_id]} />
+                />
+                <FieldError errors={[form.formState.errors.document]} />
               </Field>
             )}
           />

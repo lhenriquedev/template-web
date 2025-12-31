@@ -47,7 +47,7 @@ export function CreateSubsubcategoryForm({
     resolver: zodResolver(createSubsubcategorySchema),
     defaultValues: {
       name: "",
-      subCategoryId: "",
+      subcategory_id: "",
     },
   });
 
@@ -95,7 +95,7 @@ export function CreateSubsubcategoryForm({
 
           <Controller
             control={form.control}
-            name="subCategoryId"
+            name="subcategory_id"
             render={({ field }) => (
               <Field>
                 <FieldLabel>Subcategoria</FieldLabel>
@@ -105,7 +105,7 @@ export function CreateSubsubcategoryForm({
                   disabled={isPending}
                 >
                   <SelectTrigger>
-                    <SelectValue placeholder="Selecione a subcategoria" />
+                    <SelectValue>Selecione a subcategoria</SelectValue>
                   </SelectTrigger>
                   <SelectContent>
                     {subcategories.map((subcategory) => (
@@ -115,7 +115,7 @@ export function CreateSubsubcategoryForm({
                     ))}
                   </SelectContent>
                 </Select>
-                <FieldError errors={[form.formState.errors.subCategoryId]} />
+                <FieldError errors={[form.formState.errors.subcategory_id]} />
               </Field>
             )}
           />
