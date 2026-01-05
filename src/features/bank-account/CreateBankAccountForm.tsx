@@ -133,10 +133,18 @@ export function CreateBankAccountForm({
                 <Select
                   {...field}
                   onValueChange={field.onChange}
+                  value={field.value}
                   disabled={isPending}
+                  items={companies?.map((company) => ({
+                    label: company.name,
+                    value: company.id,
+                  }))}
                 >
-                  <SelectTrigger className="w-full">
-                    <SelectValue>Selecione a empresa</SelectValue>
+                  <SelectTrigger
+                    className="w-full"
+                    data-placeholder="Selecione a empresa"
+                  >
+                    <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
                     {companies?.map((company) => (
