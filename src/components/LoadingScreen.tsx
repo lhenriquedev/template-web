@@ -1,18 +1,20 @@
-import logo from "@/assets/logo-indaia.png";
-import { Loading03Icon } from "@hugeicons/core-free-icons";
+import { LayersIcon, Loading03Icon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
 
 export function LoadingScreen() {
   return (
     <div className="bg-background flex min-h-screen w-full flex-col items-center justify-center">
-      <div className="relative flex flex-col items-center justify-center">
-        <img
-          src={logo}
-          alt="Indaiá Finance"
-          className="h-24 w-auto animate-pulse object-contain md:h-32"
-        />
-
-        <HugeiconsIcon icon={Loading03Icon} className="animate-spin size-10" />
+      <div className="flex flex-col items-center gap-4">
+        <div className="bg-primary/10 text-primary flex size-20 items-center justify-center rounded-3xl border">
+          <HugeiconsIcon icon={LayersIcon} strokeWidth={2} className="size-10" />
+        </div>
+        <div className="flex flex-col items-center gap-2 text-center">
+          <p className="text-lg font-semibold">Template Web</p>
+          <p className="text-muted-foreground text-sm">
+            Loading the authenticated application shell.
+          </p>
+        </div>
+        <HugeiconsIcon icon={Loading03Icon} className="size-8 animate-spin" />
       </div>
     </div>
   );

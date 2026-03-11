@@ -1,39 +1,36 @@
-import { useForceRender } from "@/hooks/useForceRender";
 import { AuthService } from "@/services/AuthService";
 import { httpClient } from "@/services/httpClient";
-import { ACCESS_TOKEN, REFRESH_TOKEN } from "@/storage/keys";
-import { useQueryClient } from "@tanstack/react-query";
 import {
-  createContext,
-  use,
-  useCallback,
-  useLayoutEffect,
-  useState,
-} from "react";
+  clearSessionTokens,
+  getAccessToken,
+  getRefreshToken,
+  hasSessionTokens,
+  setSessionTokens,
+} from "@/storage/session";
+import { useQueryClient } from "@tanstack/react-query";
+import { AxiosError } from "axios";
+import { useCallback, useLayoutEffect, useState } from "react";
+
+import { AuthContext, type AuthContextValue } from "./auth-context";
 
 type AuthProviderProps = {
   children: React.ReactNode;
 };
 
-interface IAuthContextValue {
-  signedIn: boolean;
-  signIn(email: string, password: string): Promise<void>;
-  signOut(): void;
-}
-
-export const AuthContext = createContext({} as IAuthContextValue);
-
 export function AuthProvider({ children }: AuthProviderProps) {
-  const [signedIn, setSignedIn] = useState(
-    () => !!localStorage.getItem(ACCESS_TOKEN)
-  );
+  const [signedIn, setSignedIn] = useState(() => hasSessionTokens());
 
   const queryClient = useQueryClient();
-  const forceRender = useForceRender();
+
+  const clearSessionState = useCallback(() => {
+    clearSessionTokens();
+    queryClient.clear();
+    setSignedIn(false);
+  }, [queryClient]);
 
   useLayoutEffect(() => {
     const interceptorId = httpClient.interceptors.request.use((config) => {
-      const accessToken = localStorage.getItem(ACCESS_TOKEN);
+      const accessToken = getAccessToken();
 
       if (accessToken) {
         config.headers.set("Authorization", `Bearer ${accessToken}`);
@@ -50,79 +47,66 @@ export function AuthProvider({ children }: AuthProviderProps) {
   useLayoutEffect(() => {
     const interceptorId = httpClient.interceptors.response.use(
       (response) => response,
-      async (error) => {
+      async (error: AxiosError) => {
         const originalRequest = error.config;
-        const refreshToken = localStorage.getItem(REFRESH_TOKEN);
+        const refreshToken = getRefreshToken();
+        const requestUrl = originalRequest?.url;
 
-        if (originalRequest.url === "/refresh-token") {
-          setSignedIn(false);
-          localStorage.clear();
+        if (requestUrl === "/refresh-token") {
+          clearSessionState();
           return Promise.reject(error);
         }
 
-        if (error.response?.status !== 401 || !refreshToken) {
+        if (
+          !originalRequest ||
+          error.response?.status !== 401 ||
+          !refreshToken
+        ) {
           return Promise.reject(error);
         }
 
-        const { accessToken, refreshToken: newRefreshToken } =
-          await AuthService.refreshToken(refreshToken);
+        try {
+          const refreshedSession = await AuthService.refreshToken(refreshToken);
 
-        localStorage.setItem(ACCESS_TOKEN, accessToken);
-        localStorage.setItem(REFRESH_TOKEN, newRefreshToken);
+          setSessionTokens(refreshedSession);
+          setSignedIn(true);
 
-        return httpClient(originalRequest);
-      }
+          return httpClient(originalRequest);
+        } catch (refreshError) {
+          clearSessionState();
+          return Promise.reject(refreshError);
+        }
+      },
     );
 
     return () => {
       httpClient.interceptors.response.eject(interceptorId);
     };
-  }, []);
-
-  useLayoutEffect(() => {
-    async function load() {
-      const accessToken = localStorage.getItem(ACCESS_TOKEN);
-      const refreshToken = localStorage.getItem(REFRESH_TOKEN);
-
-      if (!accessToken || !refreshToken) {
-        return;
-      }
-
-      localStorage.setItem(ACCESS_TOKEN, accessToken);
-      localStorage.setItem(REFRESH_TOKEN, refreshToken);
-      setSignedIn(true);
-    }
-
-    load();
-  }, []);
+  }, [clearSessionState]);
 
   const signIn = useCallback(async (email: string, password: string) => {
-    const { accessToken, refreshToken } = await AuthService.signIn({
+    const session = await AuthService.signIn({
       email,
       password,
     });
 
-    localStorage.setItem(ACCESS_TOKEN, accessToken);
-    localStorage.setItem(REFRESH_TOKEN, refreshToken);
+    setSessionTokens(session);
     setSignedIn(true);
   }, []);
 
   const signOut = useCallback(async () => {
-    queryClient.clear();
-    forceRender();
-    await AuthService.signOut();
-    setSignedIn(false);
-  }, [queryClient, forceRender]);
+    try {
+      await AuthService.signOut();
+    } finally {
+      clearSessionState();
+    }
+  }, [clearSessionState]);
 
-  const value: IAuthContextValue = {
+  const value: AuthContextValue = {
     signedIn,
     signIn,
     signOut,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
-}
-
-export function useAuth() {
-  return use(AuthContext);
 }

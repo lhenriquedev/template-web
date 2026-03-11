@@ -1,4 +1,4 @@
-import { useAuth } from "@/contexts/AuthContext";
+import { useAuth } from "@/contexts/useAuth";
 import { Navigate, Outlet } from "react-router";
 
 export function AuthGuard({ isPrivate }: { isPrivate: boolean }) {
